@@ -17,12 +17,13 @@
 using namespace ogdf;
 
 void applyFMMMLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
-void applyGEMLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
-void applySugiyamaLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
-void applySpringEmbedderGridVariant(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
-void applySpringEmbedderKK(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
-void applyTutteLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
+//void applyGEMLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
+//void applySugiyamaLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
+//void applySpringEmbedderGridVariant(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
+//void applySpringEmbedderKK(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
+//void applyTutteLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
 void applyDavidsonHarelLayout(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
+void applyNodeRespecterLayout(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
 
 // Randomized generators
 void randomRegularGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
@@ -321,33 +322,6 @@ int main(int argc, char* argv[]) {
 				std::vector<std::string> subArgs = std::vector<std::string>(argv + i + 2, argv + endIndex);
 				std::map<std::string, std::string> localParams = parseArgs(subArgs);
 				
-				//if (generatorName == "regularTree") {
-				//	//std::cout << "Generating a tree... " << std::endl;
-				//	//int endIndex = findEndIndex(i, argc, argv, stopStrings);
-				//	//
-				//	//std::vector<std::string> subArgs(argv + i, argv + endIndex);
-				//	//auto genArgsMap = parseArgs(subArgs);
-				//	int nodes = 256;
-				//	int children = 3;
-				//	if (localParams.count("nodes")) {
-				//		nodes = std::stoi(localParams.at("nodes"));
-				//	}
-				//	if (localParams.count("children")) {
-				//		children = std::stoi(localParams.at("children"));
-				//	}
-				//	
-				//	regularTree(G, nodes, children);
-				//	
-				//	// Create nodeMap with integer IDs as strings
-				//	
-				//	for (node v : G.nodes) {
-				//		nodeMap[std::to_string(nodeId++)] = v;
-				//	}
-				//	
-				//	GA.init(G, GraphAttributes::nodeGraphics | GraphAttributes::edgeGraphics);
-				//	std::cout << "Generated a tree. Nodes: " << G.numberOfNodes() << std::endl;
-				//	i = endIndex - 1;
-				//}
 				if (generatorName == "randomRegularGraph") {
 				randomRegularGraphGen(G, localParams);
 				}
@@ -480,30 +454,33 @@ int main(int argc, char* argv[]) {
 				if (layoutName == "FMMM") {
 					//std::cout << "Applying layout: " << layoutName << std::endl;
 					applyFMMMLayout(GA, layoutParams);
-					//applyFFFMLayout(GA, layoutParams);
 				} 
-				else if (layoutName == "GEM") {
-					//std::cout << "Applying layout: " << layoutName << std::endl;
-					applyGEMLayout(GA, layoutParams);
-					//applyFFFMLayout(GA, layoutParams);
-				}
-				else if (layoutName == "Sugiyama") {
-					applySugiyamaLayout(GA, layoutParams);
-				}
-				else if (layoutName == "SpringEmbedderGridVariant") {
-					applySpringEmbedderGridVariant(GA, layoutParams);
-				}
-				else if (layoutName == "SpringEmbedderKK") {
-					applySpringEmbedderKK(GA, layoutParams);
-				}
-				else if (layoutName == "Tutte") {
-					applyTutteLayout(GA, layoutParams);
-				}
+				//else if (layoutName == "GEM") {
+				//	//std::cout << "Applying layout: " << layoutName << std::endl;
+				//	applyGEMLayout(GA, layoutParams);
+				//	//applyFFFMLayout(GA, layoutParams);
+				//}
+				//else if (layoutName == "Sugiyama") {
+				//	applySugiyamaLayout(GA, layoutParams);
+				//}
+				//else if (layoutName == "SpringEmbedderGridVariant") {
+				//	applySpringEmbedderGridVariant(GA, layoutParams);
+				//}
+				//else if (layoutName == "SpringEmbedderKK") {
+				//	applySpringEmbedderKK(GA, layoutParams);
+				//}
+				//else if (layoutName == "Tutte") {
+				//	applyTutteLayout(GA, layoutParams);
+				//}
 				else if (layoutName == "DavidsonHarel") {
 					applyDavidsonHarelLayout(GA, layoutParams);
 				}
+				else if (layoutName == "NodeRespecter") {
+					applyNodeRespecterLayout(GA, layoutParams);
+				}
 				else {
 					std::cout << "No such layout: " << layoutName << std::endl;
+					exit(1);
 				}
 				
 				std::cout << "Layout " << layoutName << " applied successfully" << std::endl;
