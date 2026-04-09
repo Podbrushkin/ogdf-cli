@@ -22,8 +22,10 @@ void applyFMMMLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std:
 //void applySpringEmbedderGridVariant(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
 //void applySpringEmbedderKK(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
 //void applyTutteLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
+void applyDavidsonHarel(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
 void applyDavidsonHarelLayout(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
 void applyNodeRespecterLayout(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
+void applySpringEmbedderKK(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
 
 // Randomized generators
 void randomRegularGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
@@ -466,14 +468,14 @@ int main(int argc, char* argv[]) {
 				//else if (layoutName == "SpringEmbedderGridVariant") {
 				//	applySpringEmbedderGridVariant(GA, layoutParams);
 				//}
-				//else if (layoutName == "SpringEmbedderKK") {
-				//	applySpringEmbedderKK(GA, layoutParams);
-				//}
+				else if (layoutName == "SpringEmbedderKK") {
+					applySpringEmbedderKK(GA, layoutParams);
+				}
 				//else if (layoutName == "Tutte") {
 				//	applyTutteLayout(GA, layoutParams);
 				//}
 				else if (layoutName == "DavidsonHarel") {
-					applyDavidsonHarelLayout(GA, layoutParams);
+					applyDavidsonHarel(GA, layoutParams);
 				}
 				else if (layoutName == "NodeRespecter") {
 					applyNodeRespecterLayout(GA, layoutParams);

@@ -21,23 +21,25 @@ function Get-LayoutMethodDefinition ($cppHeaderFile) {
 	$methods = Get-Methods $cppHeaderFile
 	
 	# This one will be filled in Get-MethodCalls
-	$script:enumTypes = @()
+	$script:referenceTypes = @()
 	
 	$ifElses = Get-MethodCalls $methods
 	$ifElses = $ifElses | Join-String -sep "`nelse "
 	
-	Write-Host enumTypes: $script:enumTypes
+	Write-Host referenceTypes: $script:referenceTypes
 	
 	# Get layout comment
+	$layoutComment = $null;
 	$endExclude = sls -Path $cppHeaderFile -Pattern ': public LayoutModule' | % LineNumber
 	if ($EndExclude.count -ne 1) {
-		Write-Host -foreg red $cppHeaderFile ": public LayoutModule?"
-		return
+		Write-Host -foreg yellow $cppHeaderFile "is it: public LayoutModule? Will be no comment"
+		#return
+	} else {
+		$layoutComment = Get-CommentAboveLine -lines (cat $cppHeaderFile) -EndExclude $endExclude
 	}
-	$layoutComment = Get-CommentAboveLine -lines (cat $cppHeaderFile) -EndExclude $endExclude
 
 	# Get methods comments
-	$methodsComments = $methods | ? {$_.params.type -in ($allowedTypes+$script:enumTypes)} | % {
+	$methodsComments = $methods | ? {$_.params.type -in ($allowedTypes+$script:referenceTypes)} | % {
 	$_.name+' ('+$_.params.type+")`n"+$_.comment+"`n"
 	} | Join-String -sep "`n"
 
@@ -87,7 +89,7 @@ function Get-Methods ($cppHeaderFile) {
 	$lines = cat $cppHeaderFile
 	$methods = & $ctags --output-format=json --extras=* --fields=* --c++-kinds=+p -f - $cppHeaderFile | fromJson -de 9 | ? access -eq public | ? extras -ne qualified | ? kind -in function,prototype | ? signature -NotLike '()*' | % {
 		$method = $_
-		$paramType = $method.signature -replace '^\(([a-z]+).*','$1'
+		$paramType = $method.signature -replace '^\(([a-z:]+).*','$1'
 		Add-Member -inp $method -NotePropertyName params -NotePropertyValue @{type=$paramType}
 
 		# Add comments
@@ -105,9 +107,9 @@ function Get-Methods ($cppHeaderFile) {
 # Create code which calls those setters (primitives and enums supported)
 function Get-MethodCalls ($methods) {
 	# --- Create method calls, first for primitives
-	$allowedTypes = 'int,double,bool' -split ','
+	$primitiveTypes = 'int,double,bool' -split ','
 	$typeToCast = @{int='std::stoi'; double='std::stod'; bool='strToBool'}
-	$ifElses = $methods | ? {$_.params.type -in $allowedTypes} | % {
+	$ifElses = $methods | ? {$_.params.type -in $primitiveTypes} | % {
 		$m = $_
 		$withoutSetPrefixCondition = ""
 		if ($m.name -match '^set') { 
@@ -121,45 +123,55 @@ function Get-MethodCalls ($methods) {
 "@
 	}
 	# Second, for enums
-	$script:enumTypes = @()
-	$ifElses += $methods | ? {$_.params.type -notin $allowedTypes} | % {
+	$script:referenceTypes = @()
+	$ifElses += $methods | ? {$_.params.type -notin $primitiveTypes} | % {
 		$method = $_
-		$methodParamType = $method.params.type
-		$enumLocation = $cppHeaderFile.BaseName # default
+		#write-host 0 
+		# It's either enum name or qualified class name where enums are
+		$methodParamType = $method.params.type 
+		Write-host methodParamType: $methodParamType
+		
+		$enumLocation = $null
 		$enumName = $null
 		$enumValues = @()
 		
 		# This one finds enum which is declared in layout class itself
-		$enumTag = & $ctags --output-format=json --extras=* --fields=* --c++-kinds=+p -f - $cppHeaderFile | 
+		$global:enumTag = & $ctags --output-format=json --extras=* --fields=* --c++-kinds=+p -f - $cppHeaderFile | 
 			fromJson -de 9 | 
 			? kind -eq enum | 
 			? extras -ne qualified | 
 			? name -eq $methodParamType
 		# Handle internal enums
 		if ($enumTag) {
-			$enumValues = $enumTag.pattern -replace '.*?\{\s*(.*?)\s*\}.*','$1' -split ',\s*'
-			Write-Host enumValues: $enumValues
-			$method.comment += "`nPossible values: "+($enumValues -join ", ")
-			$enumName = $enumTag.name
-			$script:enumTypes += $enumName
+			write-host 1 $enumObj
+			$enumObj = Get-EnumObj $enumTag
+			$enumValues = $enumObj.values
+			
+			$method.comment += "`nPossible values: `n"+($enumObj.comment)
+			$enumName = $enumObj.name
+			$script:referenceTypes += $enumName
+			$enumLocation = $enumObj.location -replace 'ogdf::'
 		}
 		# Handle external enums
 		else {
+			$classWithEnums,$enumName = ($methodParamType -split '::')[0,1]
 			# Find class where enums can be declared
-			$headerWithEnums = gci -Recurse (gi $method.path).Directory "$methodParamType*" | select -f 1
-			$enumName = $method.signature -replace '.*::(\w+) .*','$1'
+			$headerWithEnums = gci -Recurse (gi $method.path).Directory "$classWithEnums*" | select -f 1
+			#$enumName = $method.signature -replace '.*::(\w+) .*','$1'
 			if (!$headerWithEnums) { return }
-			$foundEnum = Get-EnumsFromHeader $headerWithEnums | ? {$_.name.endsWith($enumName)}
-			if (!$foundEnum) { return }
-			$enumLocation = ($foundEnum.name -split '::')[-2]
-			write-host enumvaluescount: $foundEnum.values.value.count
-			if ($foundEnum.values.value.count -eq 1) {
-				write-host ($foundEnum | toJson -de 9)
-			}
-			$enumValues = $foundEnum.values.value
-			$valComments = $foundEnum.values | % {$_.value+"`n("+$_.comment+")`n"} #
-			$method.comment += "`nPossible values: " + $valComments
-			$script:enumTypes += $enumLocation
+			$enumObj = Get-EnumsFromHeader $headerWithEnums | ? {$_.name.endsWith($enumName)}
+			#write-host 2 $enumObj
+			if (!$enumObj) { return }
+			$enumName = $enumObj.name
+			$enumValues = $enumObj.values
+			$enumLocation = $enumObj.location -replace 'ogdf::'
+			#write-host enumvaluescount: $foundEnum.values.value.count
+			#if ($foundEnum.values.value.count -eq 1) {
+			#	write-host ($foundEnum | toJson -de 9)
+			#}
+			
+			$method.comment += "`nPossible values: `n" + $enumObj.comment
+			$script:referenceTypes += $enumLocation+'::'+$enumName
 		} 
 		
 		
@@ -189,22 +201,22 @@ return $ifElses
 
 function Get-EnumsFromHeader ($headerWithEnums) {
 	$cppCode = cat -Raw $headerWithEnums
-	& $ctags --output-format=json --extras=* --fields=* --c++-kinds=+p -f - $headerWithEnums | fromJson -de 9 | ? kind -eq enum | ? extras -eq qualified | % {
-		$regex = $_.pattern -replace '/|\$|\^'
-		$regex = '(?smi)'+[regex]::Escape($regex)+'.*?\}'
-		$enumDef = $cppCode | sls -Pattern $regex | % Matches | % {$_.Groups[0].Value.trim()}
-		$enumValues = $enumDef | sls '(?<!//),.*' -allm | % Matches | % {$from=0}{
-				$to = $_.Index+$_.Length
-				$enumDef.Substring($from,$to-$from)
-				$from = $to
-			}{$enumDef.Substring($to,$enumDef.Length-$to)} | 
-			% {
-				$def = $_ -replace '.*[}{].*'
-				$value = ($def -replace '//.*'  -replace '\s*,\s*').trim()
-				$comment = $def | sls '//!?(.*)' -allm | % Matches | % {$_.Groups[1].Value.trim()} | Join-String -sep "`n" 
-				[pscustomobject]@{value=$value; comment=$comment; }
-			}
-		[pscustomobject]@{name=$_.name; values=$enumValues; }
+	& $ctags --output-format=json --extras=* --fields=* --c++-kinds=+p -f - $headerWithEnums | fromJson -de 9 | ? kind -eq enum | ? extras -ne qualified | % {
+		$enumTag = $_
+		Get-EnumObj $enumTag
+	}
+}
+function Get-EnumObj ($enumTag) {
+	$regex = $enumTag.pattern -replace '/|\$|\^'
+	$regex = '(?smi)'+[regex]::Escape($regex)+'.*?\}'
+	$from = $enumTag.line-1; $lines = $enumTag.end-$from
+	$enumDef = cat $enumTag.path | select -Skip $from -First $lines | Join-String -sep "`n"
+	$enumValues = $enumDef -replace '^.*\{\s*|\}.*' -split '\r?\n' -replace '\s*//.*' -replace '^\s*|,' -split '\s+' | ? {$_}
+	$enumComment = $enumDef -split '\r?\n' -notmatch '{|}' -replace '^\s*' -join "`n"
+	return [pscustomobject]@{
+		definition=$enumDef; values=$enumValues; 
+		comment=$enumComment; name=$enumTag.name; 
+		location=$enumTag.scope;
 	}
 }
 
