@@ -11,7 +11,7 @@
 
 using namespace ogdf;
 
-bool strToBool(const std::string& str) {
+inline bool strToBool(const std::string& str) {
     if (str == "true" || str == "1" || str == "yes" || str == "on") {
         return true;
     }
