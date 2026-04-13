@@ -16,6 +16,8 @@
 
 using namespace ogdf;
 
+void applyGen(Graph& G, const std::string& genName, const std::map<std::string, std::string>& localParams);
+
 void applyFMMMLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
 //void applyGEMLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
 //void applySugiyamaLayout(ogdf::GraphAttributes& GA, const std::map<std::string, std::string>& layoutParams);
@@ -27,42 +29,7 @@ void applyDavidsonHarelLayout(GraphAttributes& GA, const std::map<std::string, s
 void applyNodeRespecterLayout(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
 void applySpringEmbedderKK(GraphAttributes& GA, const std::map<std::string, std::string>& localParams);
 
-// Randomized generators
-void randomRegularGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomSimpleGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomSimpleGraphByProbabilityGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomSimpleConnectedGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomBiconnectedGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomPlanarConnectedGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomPlanarBiconnectedGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomPlanarBiconnectedDigraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomUpwardPlanarBiconnectedDigraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomPlanarCNBGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomTriconnectedGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomPlanarTriconnectedGraph1Gen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomPlanarTriconnectedGraph2Gen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomTree1Gen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomTree2Gen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomDigraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomSeriesParallelDAGGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomGeometricCubeGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomWaxmanGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void preferentialAttachmentGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void randomWattsStrogatzGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
 
-// Determenistic gens
-void regularLatticeGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void regularTreeGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void completeGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void completeBipartiteGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void wheelGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void cubeGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void globeGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void suspensionGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void gridGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void petersenGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
-void emptyGraphGen(Graph& G, const std::map<std::string, std::string>& localParams);
 
 // Helper function to check if a string ends with a suffix
 bool endsWith(const std::string& str, const std::string& suffix) {
@@ -324,109 +291,10 @@ int main(int argc, char* argv[]) {
 				std::vector<std::string> subArgs = std::vector<std::string>(argv + i + 2, argv + endIndex);
 				std::map<std::string, std::string> localParams = parseArgs(subArgs);
 				
-				if (generatorName == "randomRegularGraph") {
-				randomRegularGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomGraph") {
-				randomGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomSimpleGraph") {
-				randomSimpleGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomSimpleGraphByProbability") {
-				randomSimpleGraphByProbabilityGen(G, localParams);
-				}
-				 else if (generatorName == "randomSimpleConnectedGraph") {
-				randomSimpleConnectedGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomBiconnectedGraph") {
-				randomBiconnectedGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomPlanarConnectedGraph") {
-				randomPlanarConnectedGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomPlanarBiconnectedGraph") {
-				randomPlanarBiconnectedGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomPlanarBiconnectedDigraph") {
-				randomPlanarBiconnectedDigraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomUpwardPlanarBiconnectedDigraph") {
-				randomUpwardPlanarBiconnectedDigraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomPlanarCNBGraph") {
-				randomPlanarCNBGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomTriconnectedGraph") {
-				randomTriconnectedGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomPlanarTriconnectedGraph1") {
-				randomPlanarTriconnectedGraph1Gen(G, localParams);
-				}
-				 else if (generatorName == "randomPlanarTriconnectedGraph2") {
-				randomPlanarTriconnectedGraph2Gen(G, localParams);
-				}
-				 else if (generatorName == "randomTree1") {
-				randomTree1Gen(G, localParams);
-				}
-				 else if (generatorName == "randomTree2") {
-				randomTree2Gen(G, localParams);
-				}
-				 else if (generatorName == "randomDigraph") {
-				randomDigraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomSeriesParallelDAG") {
-				randomSeriesParallelDAGGen(G, localParams);
-				}
-				 else if (generatorName == "randomGeometricCubeGraph") {
-				randomGeometricCubeGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomWaxmanGraph") {
-				randomWaxmanGraphGen(G, localParams);
-				}
-				 else if (generatorName == "preferentialAttachmentGraph") {
-				preferentialAttachmentGraphGen(G, localParams);
-				}
-				 else if (generatorName == "randomWattsStrogatzGraph") {
-				randomWattsStrogatzGraphGen(G, localParams);
-				}
-				
-				// DETERMINISTIC GENERATORS
-				else if (generatorName == "regularLatticeGraph") {
-				regularLatticeGraphGen(G, localParams);
-				}
-				 else if (generatorName == "regularTree") {
-				regularTreeGen(G, localParams);
-				}
-				 else if (generatorName == "completeGraph") {
-				completeGraphGen(G, localParams);
-				}
-				 else if (generatorName == "completeBipartiteGraph") {
-				completeBipartiteGraphGen(G, localParams);
-				}
-				 else if (generatorName == "wheelGraph") {
-				wheelGraphGen(G, localParams);
-				}
-				 else if (generatorName == "cubeGraph") {
-				cubeGraphGen(G, localParams);
-				}
-				 else if (generatorName == "globeGraph") {
-				globeGraphGen(G, localParams);
-				}
-				 else if (generatorName == "suspension") {
-				suspensionGen(G, localParams);
-				}
-				 else if (generatorName == "gridGraph") {
-				gridGraphGen(G, localParams);
-				}
-				 else if (generatorName == "petersenGraph") {
-				petersenGraphGen(G, localParams);
-				}
-				 else if (generatorName == "emptyGraph") {
-				emptyGraphGen(G, localParams);
-				}
+				applyGen(G, generatorName, localParams);
 
-					else {
+
+					if (false) {
 						static const char* availRandomizedGenNames = "randomRegularGraph \n randomGraph \n randomSimpleGraph \n randomSimpleGraphByProbability \n randomSimpleConnectedGraph \n randomBiconnectedGraph \n randomPlanarConnectedGraph \n randomPlanarBiconnectedGraph \n randomPlanarBiconnectedDigraph \n randomUpwardPlanarBiconnectedDigraph \n randomPlanarCNBGraph \n randomTriconnectedGraph \n randomPlanarTriconnectedGraph1 \n randomPlanarTriconnectedGraph2 \n randomTree1 \n randomTree2 \n randomDigraph \n randomSeriesParallelDAG \n randomGeometricCubeGraph \n randomWaxmanGraph \n preferentialAttachmentGraph \n randomWattsStrogatzGraph";
 						static const char* availDeterministicGenNames = "regularLatticeGraph \n regularTree \n completeGraph \n completeBipartiteGraph \n wheelGraph \n cubeGraph \n globeGraph \n suspension \n gridGraph \n petersenGraph \n emptyGraph";
 						std::cout << "No such generator: " << generatorName << std::endl;
@@ -501,6 +369,7 @@ int main(int argc, char* argv[]) {
 			} else {
 				// Default OGDF exporter, find formats here:
 				// https://ogdf.netlify.app/classogdf_1_1_graph_i_o
+				// https://ogdf.github.io/doc/ogdf/classogdf_1_1_graph_i_o.html
 				ogdf::GraphIO::write(GA, file, nullptr);
 			}
 		}
