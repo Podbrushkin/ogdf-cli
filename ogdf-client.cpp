@@ -293,15 +293,6 @@ int main(int argc, char* argv[]) {
 				
 				applyGen(G, generatorName, localParams);
 
-
-					if (false) {
-						static const char* availRandomizedGenNames = "randomRegularGraph \n randomGraph \n randomSimpleGraph \n randomSimpleGraphByProbability \n randomSimpleConnectedGraph \n randomBiconnectedGraph \n randomPlanarConnectedGraph \n randomPlanarBiconnectedGraph \n randomPlanarBiconnectedDigraph \n randomUpwardPlanarBiconnectedDigraph \n randomPlanarCNBGraph \n randomTriconnectedGraph \n randomPlanarTriconnectedGraph1 \n randomPlanarTriconnectedGraph2 \n randomTree1 \n randomTree2 \n randomDigraph \n randomSeriesParallelDAG \n randomGeometricCubeGraph \n randomWaxmanGraph \n preferentialAttachmentGraph \n randomWattsStrogatzGraph";
-						static const char* availDeterministicGenNames = "regularLatticeGraph \n regularTree \n completeGraph \n completeBipartiteGraph \n wheelGraph \n cubeGraph \n globeGraph \n suspension \n gridGraph \n petersenGraph \n emptyGraph";
-						std::cout << "No such generator: " << generatorName << std::endl;
-						std::cout << "Try these randomized: " << std::endl << availRandomizedGenNames << std::endl << std::endl;
-						std::cout << "Try these deterministic: " << availDeterministicGenNames << std::endl;
-						exit(1);
-					}
 					// After generator was used, need to record node ids and init GA
 					for (node v : G.nodes) {
 						nodeMap[std::to_string(nodeId++)] = v;

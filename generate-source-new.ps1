@@ -29,9 +29,11 @@ if ($_.defVal) {
 }
 }
 
-$helpText = $fObj | % {$_.psobject.properties.value} | Out-String
+$helpText = "=== "+$fObj.name+$fObj.nameSuffix+" ===`n"
+$helpText += $fObj | Select-Object -excl name,params,nameSuffix | Format-List | Out-String
+$helpText += $fObj.params | Format-Table | Out-String
 $helpTextEscaped = $helpText.Replace('\','\\').Replace("`n",'\n').replace('"','\"').trim()
-$helpTextEscaped = 'no help'
+#$helpTextEscaped = 'no help'
 
 $generatorMethodTemplate.replace('%GEN_NAME%',$fObj.name).
 Replace('%VARIABLE_DEFINITIONS%',$variableDefinitions -join "`n").
@@ -39,11 +41,46 @@ Replace('%VAR_NAMES%',$fObj.params.declName -join ', ').
 replace('%HELP_TEXT%',$helpTextEscaped).
 replace('%FUNC_WRAPPER_NAME%',$funcWrapperName)
 }
+
+function Replace-LinesBetweenAnchors($inputStr,$anchorStr,$replacementStr) {
+  $anchorStrEscaped = [regex]::Escape($anchorStr)
+  $mGroup = $inputStr | Select-String "(?smi)$anchorStrEscaped.*?\n(.*?)(?=\r?\n[^\r\n]*?$anchorStrEscaped)" | ForEach-Object Matches | ForEach-Object {$_.Groups[1]}
+  $outStr = $inputStr.Remove($mGroup.Index,$mGroup.Length).Insert($mGroup.Index,$replacementStr)
+  return $outStr
+}
 return
+$fObjs = Get-FunctionGeneratorObjects
 
 $fObjs | group name | ? Count -gt 1 | % {
-  $_.Group | select -Skip 1 | % {$i=2}{ Add-Member -inp $_ -NotePropertyName nameSuffix -NotePropertyValue ($i++) -Force }
+  $_.Group | % {$i=1}{ Add-Member -inp $_ -NotePropertyName nameSuffix -NotePropertyValue ($i++) -Force }
 }
+
+$genDefinitions = $fObjs | % { Get-GeneratorFunctionSrc $_ } | join-string -sep "`n"
+$anchorStr = '%GENERATORS_DEFINITIONS%'
+$inputStr = gc -Raw ./MyGenerators.cpp
+$outStr = Replace-LinesBetweenAnchors $inputStr $anchorStr $genDefinitions
+$outStr | Set-Content ./MyGenerators.cpp -NoNewline
+
+$genTable = $fObjs | % {
+'  {"%%", %%Generator}'.Replace('%%',$_.name+$_.nameSuffix)
+} | Join-String -sep ",`n"
+$anchorStr = '%GENERATORS_TABLE%'
+$inputStr = gc -Raw ./MyGenerators.cpp
+$outStr = Replace-LinesBetweenAnchors $inputStr $anchorStr $genTable
+$outStr | Set-Content ./MyGenerators.cpp -NoNewline
+
+
+$helpText = $fObjs | % {[pscustomobject]@{a= $_.name+$_.nameSuffix; b=$_.argsString.Replace('(Graph &G, ','').Replace(')','')}} | Format-Table -HideTableHeaders | Out-String
+$helpTextEscaped = $helpText.Replace('\','\\').Replace("`n",'\n').replace('"','\"').trim()
+$helpLine = 'static const char* helpText = "{0}";' -f $helpTextEscaped
+$anchorStr = '%GENERATORS_HELPLINE%'
+$inputStr = gc -Raw ./MyGenerators.cpp
+$outStr = Replace-LinesBetweenAnchors $inputStr $anchorStr $helpLine
+$outStr | Set-Content ./MyGenerators.cpp -NoNewline
+
+# Now you can compile.
+
+return
 
 # bad:
 #$funcDefForImport = ($fObj.definition+$fObj.argsString).Replace('OGDF_EXPORT ','').Replace('ogdf::','')
@@ -61,13 +98,9 @@ if (generatorName == "$($_.name)") {
 } | Join-String -sep " else "
 
 # good:
-$fObjs | % {
-'{"%%", %%Generator}'.Replace('%%',$_.name+$_.nameSuffix)
-} | Join-String -sep ",`n"
 
 
-
-# ###########
+# ########### USAGE EXAMPLE
 
 @'
 complement --n 32 --directed false --allowSelfLoops false
